@@ -12,6 +12,7 @@ using NAudio.Wave;
 using WPFSoundVisualizationLib;
 
 using EqualizerSounds = NAudio.Extras.Equalizer;
+using SampleAggregatorNAudio = NAudio.Extras.SampleAggregator;
 
 namespace Sample_NAudio
 {
@@ -44,6 +45,9 @@ namespace Sample_NAudio
         private TimeSpan repeatStop;
         private bool inRepeatSet;
         private AudioFileReader reader;
+
+        public event EventHandler<FftEventArgs> FftCalculated;
+        public event EventHandler<MaxSampleEventArgs> MaximumCalculated;
 
         private static EqualizerBand[] _bands;
         public static EqualizerBand[] Bands { get => _bands; set => _bands = value; }
@@ -418,7 +422,9 @@ namespace Sample_NAudio
                     inputStream = new WaveChannel32(reader);
                     sampleAggregator = new SampleAggregator(fftDataSize);
                     inputStream.Sample += inputStream_Sample;
-                    equalizer = new EqualizerSounds(reader, Bands);
+
+                    equalizer = new EqualizerSounds(inputStream.ToSampleProvider(), Bands);
+
 
                     waveOutDevice.Init(equalizer);
                     ChannelLength = inputStream.TotalTime.TotalSeconds;
